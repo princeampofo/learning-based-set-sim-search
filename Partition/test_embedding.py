@@ -156,7 +156,7 @@ num_tokens_file.close()
 
 for k, v in num_tokens_dict.items():
     num_tokens = v
-    path = "datasets/" + k + "/all.dat"
+    path = "datasets/" + str(k) + "/all.dat"
 
     start_time = time.time()
     build_PTR_rep(path, num_tokens)

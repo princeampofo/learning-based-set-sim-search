@@ -1,23 +1,85 @@
-# LES3: Learning-based Exact Set Similarity Search
-The repository is being updated.
-## Structure
-Folder `Partition` contains the implementation of all partitioning methods (L2P, PAR_G, PAR_C, PAR_H) and embedding methods (PTR, PCA, MDS, doc2vec). Folder `Search` contains the implementation of set similarity search methods, including LES3, DualTrans, InvIdx, and the Brute-force method.
+# Reproducing LES3 and DualTrans Baselines
+## From: "A Length Enhanced B+-tree based index for Efficient Set Similarity Query" (ICDE 2025)
 
-## Datasets
-The links to the five datasets used in the paper:
-* KOSARAK: http://fimi.uantwerpen.be/data/
-* LIVEJ: http://socialnetworks.mpi-sws.org/data-imc2007.html
-* AOL: http://www.cim.mcgill.ca/~dudek/206/Logs/AOL-user-ct-collection/
-* FS: https://snap.stanford.edu/data/com-Friendster.html
-* PMC: http://academictorrents.com/details/06d6badd7d1b0cfee00081c28fddd5e15e106165
+This guide documents the full steps to reproduce the LES3 and DualTrans baseline
+results used in the LeB paper. The implementation is sourced from the original
+LES3 repository: https://github.com/AwesomeYifan/learning-based-set-sim-search
 
-Process the raw dataset downloaded from above websites with `Partition/process_database.py`, which includes tokenization (so that tokens are labeled 1, 2, 3,...) and sorting (details given in Section 7.1, paragraph `initialization`), and a file named `all.dat` will be produced. The KOSARAK dataset and the sampled KOSARAK used in Section 7.3 are given in folder `datasets`.
-## To reproduce the results
-### L2P
-`Partition/trainL2P.py` implements the proposed learn2partition method. It takes two input files: `all.dat` which is the dataset to be partitioned, and `all.dat-representation` which include the embedding representations of the sets to be partitioned. The output of the program includes a list of files `all.dat-group-X`, where X are non-negative intergers, containing the partitioning results at level X of the cascade framework.
-### Test embedding
-We give our partitioning results corresponding to different embedding methods (`PTR`, `PCA`, `MDS`, and `doc2vec`) in folder `datasets/kosarak-sampled/`. You can execute file `Partition/check_GPO.py` to compare the quality of different embedding methods. Or you can generate the embedding the train the model for partitioning from scratch. Simply execute the file `Partition/test_embedding.py` and four set representation files with name `all.dat-rep-XXX` will be produced in folder `datasets/kosarak-sampled/`, where `XXX` denotes `PTR`, `PCA`, `MDS`, or `doc2vec`. Use a file as the input representation file of `Partition/trainL2P.py` and get the corresponding partitioning results.
-### Test partitioning
-We give our partitioning results corresponding to different partitioning methods (`L2P`, `PAR_G`, `PAR_C`, `PAR_H`) in folder `datasets/kosarak-sampled/`. Use file `Search/test_partition.cpp` to compare the quality of different partitioning methods. You can also perform the partitioning from scratch. The partitioning results of L2P can be produced by file `Partition/trainL2P.py`. The partitioning results of PAR_G, PAR_C, PAR_H can be produced by file `Partition/test_partitioners.py`.
-### Test search
-Execute file `Search/test_search.cpp` to get the results (index size and search time) of all set similarity search methods (`LES3`, `DualTrans`, `InvIdx`, `Brute-Force`).
+### Notes on Reproducibility
+- Results may differ from the paper due to hardware, compiler, and platform differences.
+
+## Step 1: Process Raw Datasets
+
+`process_database.py` tokenizes and sorts the raw data into `all.dat`. It also
+prints the number of distinct tokens, which you need for Step 2.
+
+Run from the repo root:
+```bash
+python3 Partition/process_database.py
+```
+
+## Step 2: Generate Set Representations (PTR)
+
+`test_embedding.py` generates PTR representations used by the Siamese network.
+
+Run:
+```bash
+python3 Partition/test_embedding.py
+```
+
+This produces `all.dat-rep-PTR` in your dataset folder.
+
+---
+
+## Step 3: Train LES3 Partitions (L2P)
+
+`trainL2P.py` runs the cascade Siamese network training. This is the most
+time-consuming step and constitutes the majority of LES3's construction time.
+
+**Time this step — it is part of LES3's reported construction time:**
+```bash
+time python3 Partition/trainL2P.py
+```
+
+Before running, update these two variables at the top of the script:
+
+```python
+# For kosarak:
+path = "datasets/kosarak/all.dat"
+num_sets = 990002   # from: wc -l datasets/kosarak/all.dat to get line count
+```
+
+This produces group files: `all.dat-group-0` through `all.dat-group-5`.
+
+### Choosing the Right Partition File
+
+Copy the chosen file group to `LES3`:
+```bash
+# eg. For RETAIL:
+cp datasets/retail/all.dat-group-2 datasets/retail/LES3
+```
+
+## Step 6: Configure `test_search.cpp`
+
+Update the dataset paths in `test_search.cpp` to point to your `all.dat` and `LES3` files. These paths are used by both LES3 and DualTrans for loading the dataset and the LES3 partitions, respectively.
+
+## Step 7: Compile
+```bash
+cd Search
+g++ -o test_search test_search.cpp
+```
+
+---
+
+## Step 8: Run
+
+From inside the `Search/` directory, run and save output:
+
+```bash
+# Save to file and print to terminal simultaneously
+./test_search | tee results_retail.txt
+
+# Repeat for each dataset after updating test_search.cpp and recompiling
+./test_search | tee results_kosarak.txt
+./test_search | tee results_lastfm.txt
+```
