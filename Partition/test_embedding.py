@@ -3,9 +3,9 @@ import math
 import random
 import numpy as np
 from sklearn.decomposition import PCA
-from mds import MDS,landmark_MDS
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import time
+import json
 #token id must start from 0
 
 def read_database(path):
@@ -102,7 +102,7 @@ def build_landmark_matrix(database):
     distance_matrix = np.array(distance_matrix)
     return landmarks, distance_matrix
 
-def build_PTR_rep(path):
+def build_PTR_rep(path, num_tokens):
     reps_of_tokens = partition_based_rep(num_tokens)
     write_reps(path, reps_of_tokens)
 
@@ -124,15 +124,15 @@ def build_PCA_rep(path):
         write_file.write(str(i) + "," + ' '.join([str(v) for v in results[i]]) + "\n")
     write_file.close()
 
-def build_MDS_rep(path):
-    database = read_database(path)
-    landmarks, distance_matrix = build_landmark_matrix(database)
-    encoding_length = 2*int(math.ceil(math.log(num_tokens, 2)))
-    results = landmark_MDS(distance_matrix,landmarks,encoding_length)
-    write_file = open(path + '-rep-MDS', 'w')
-    for i in range(len(results)):
-        write_file.write(str(i) + "," + ' '.join([str(v) for v in results[i]]) + "\n")
-    write_file.close()
+# def build_MDS_rep(path):
+#     database = read_database(path)
+#     landmarks, distance_matrix = build_landmark_matrix(database)
+#     encoding_length = 2*int(math.ceil(math.log(num_tokens, 2)))
+#     results = landmark_MDS(distance_matrix,landmarks,encoding_length)
+#     write_file = open(path + '-rep-MDS', 'w')
+#     for i in range(len(results)):
+#         write_file.write(str(i) + "," + ' '.join([str(v) for v in results[i]]) + "\n")
+#     write_file.close()
 
 
 def build_doc2vec_rep(path):
@@ -148,14 +148,21 @@ def build_doc2vec_rep(path):
 
 # kos 5p
 num_sets = 49482
-num_tokens = 18735
 
-path = "datasets/kosarak-sampled/all.dat"
-start_time = time.time()
-build_PTR_rep(path)
-# build_PCA_rep(path)
-# build_MDS_rep(path)
-# build_doc2vec_rep(path)
-end_time = time.time()
-total_time = end_time - start_time
-print(total_time)
+
+num_tokens_file = open("datasets/num_tokens.json", 'r')
+num_tokens_dict = json.load(num_tokens_file)
+num_tokens_file.close()
+
+for k, v in num_tokens_dict.items():
+    num_tokens = v
+    path = "datasets/" + k + "/all.dat"
+
+    start_time = time.time()
+    build_PTR_rep(path, num_tokens)
+    # build_PCA_rep(path)
+    # build_MDS_rep(path)
+    # build_doc2vec_rep(path)
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(total_time)
