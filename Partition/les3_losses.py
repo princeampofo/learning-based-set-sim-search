@@ -7,7 +7,7 @@ class ContrastiveLoss(nn.Module):
         super(ContrastiveLoss, self).__init__()
         self.aplha = inV
 
-    def forward(self, output1, output2, force, left_sizes, right_sizes):
+    def forward(self, output1, output2, force):
 
         output1 = output1.type(torch.FloatTensor)
         output2 = output2.type(torch.FloatTensor)
