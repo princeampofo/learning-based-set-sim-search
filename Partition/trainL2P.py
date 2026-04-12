@@ -10,8 +10,8 @@ from les3_losses import ContrastiveLoss
 from les3_networks import SiameseNet, EmbeddingNetMLP
 from les3_trainer import fit_siamese
 
-path = "datasets/kosarak/all.dat"
-num_sets = 990002
+path = "datasets/retail/all.dat"
+num_sets = 88162
 
 def initialize():
     num_init_groups = 128
@@ -45,7 +45,7 @@ def generate_rep_file():
 
 def read_required_representations(trans):
     trans = set(trans)
-    file = path + '-representations'
+    file = path + '-rep-PTR'
     with open(file, 'r') as readFile:
         current_line = -1
         while True:
@@ -197,14 +197,14 @@ with open(path+"-training_time", 'w') as cost_file:
                 line = readFile.readline()
                 if not line:
                     break
-                trans = [int(id) for id in line.split(" ")]
+                trans = [int(id) for id in line.split()]
                 representations = list()
                 transactions = list()
                 read_required_representations(trans)
                 read_required_transactions(trans)
                 generate_rep_file()
                 generate_training_file(next_group_suffix)
-                # print("training model " + str(suffix))
+                print("training model " + str(next_group_suffix))
                 cascade_training(new_group_suffix=next_group_suffix, DATASET=path)
                 
         training_time = time.time() - start_time
