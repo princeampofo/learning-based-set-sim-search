@@ -1,6 +1,9 @@
 from collections import defaultdict
 import functools
 import random
+import json
+
+num_tokens_dict = {}
 
 def compare(set1, set2):
     length = min(len(set1), len(set2))
@@ -14,7 +17,7 @@ def compare(set1, set2):
     else:
         return 1
 
-def clean_database(database): 
+def clean_database(database, dataset_name): 
     # map tokens to 0, 1, 2,...
     token_dict = dict()
     new_token_id = 0
@@ -23,7 +26,8 @@ def clean_database(database):
             if token not in token_dict.keys():
                 token_dict[token] = new_token_id
                 new_token_id += 1
-    print("num. tokens: " + str(new_token_id))
+    print(f"num. tokens for {dataset_name}: {new_token_id}")
+    num_tokens_dict[dataset_name] = new_token_id
     new_database = []
     for a_set in database:
         new_database.append([token_dict[token] for token in a_set])
@@ -45,11 +49,23 @@ def read_database(path):
             database.append(temp_line)
     return database
 
-dir = "datasets/kosarak/"
-database = read_database(dir + "origin.dat")
-database = clean_database(database)
-database = sort_database(database)
+dirs = ["datasets/kosarak/", "datasets/retail/", "datasets/lastfm/"]
 
-with open(dir + "all.dat", 'w') as write_file:
-    for _set in database:
-        write_file.write(' '.join([str(v) for v in _set]) + "\n")
+for _dir in dirs:
+    print("processing " + _dir)
+    if "kosarak" in _dir or "retail" in _dir:
+        file_name = 'kosarak.dat' if "kosarak" in _dir else 'retail.dat'
+    elif "lastfm" in _dir:
+        file_name = 'lastfm.fimi'
+    database = read_database(_dir + file_name)
+    database = clean_database(database, _dir.split("/")[1])
+    database = sort_database(database)
+
+    with open(_dir + "all.dat", 'w') as write_file:
+        print("writing " + _dir + "all.dat")
+        for _set in database:
+            write_file.write(' '.join([str(v) for v in _set]) + "\n")
+
+# save the distinct token counts for each dataset as json file for later use
+with open("datasets/num_tokens.json", 'w') as json_file:
+    json.dump(num_tokens_dict, json_file)
