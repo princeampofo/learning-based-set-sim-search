@@ -204,7 +204,7 @@ with open(path+"-training_time", 'w') as cost_file:
                 read_required_transactions(trans)
                 generate_rep_file()
                 generate_training_file(next_group_suffix)
-                print("training model " + str(next_group_suffix))
+                # print("training model " + str(suffix))
                 cascade_training(new_group_suffix=next_group_suffix, DATASET=path)
                 
         training_time = time.time() - start_time
