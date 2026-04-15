@@ -10,6 +10,9 @@
 #include <cmath>
 #include <random>
 #include <set>
+#include <climits>      
+#include <functional>   
+
 typedef pair<int, vector<int>> leaf_item;
 using namespace std;
 struct RNode{

@@ -11,6 +11,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <climits>   
 typedef pair<int, vector<int>> leaf_item;
 typedef pair<float, multiset<int>> entry;
 
@@ -25,32 +26,32 @@ struct DualTrans{
     void check_correctness();
     vector<int> get_rep(multiset<int> trans);
     int findKNN(multiset<int> trans, int k);
-    void findDeltaNN(multiset<int> trans, double delta);
+    int findDeltaNN(multiset<int> trans, double delta);
     vector<set<int>> getGreedyGroups(map<int, int> token_freqs);
     vector<set<int>> getDualGroups(vector<set<int>> groups, map<int, int> token_freqs);
     void write_groups(vector<set<int>> group1, vector<set<int>> group2);
     map<int, int> read_data(string path);
     double testKNN(int k);
-    double testDeltaNN(float d);
+    // double testDeltaNN(float d);
+    double testDeltaNN(float d, vector<multiset<int>>& query_sets);
     double compute_UB(RNode* node, vector<int> coords);
     int get_size_in_MB();
 };
 DualTrans::DualTrans(string path) {
     root = new RNode;
-    
+    auto build_start = chrono::steady_clock::now();
+
     map<int, int> token_freqs = read_data(path);
     global_groups = getGreedyGroups(token_freqs);
     global_dual_groups = getDualGroups(global_groups, token_freqs);
-    // write_groups(global_groups, global_dual_groups);
-    // cout<<"tokens written";
-    // cin.get();
-    for(int i = 0; i < database.size(); i++) {
-        
+    for (int i = 0; i < database.size(); i++) {
         leaf_item item({i, get_rep(database[i])});
         root = root->insert(item);
-        
     }
-   
+
+    auto build_end = chrono::steady_clock::now();
+    double build_time_minutes = chrono::duration<double, std::ratio<60>>(build_end - build_start).count();
+    cout << "DualTrans construction time: " << build_time_minutes << " minutes" << endl;
 }
 int DualTrans::get_size_in_MB(){
     int result = root->get_size_in_bytes();
@@ -211,11 +212,12 @@ int DualTrans::findKNN(multiset<int> trans, int k) {
     return check_count;
     // return result;
 }
-void DualTrans::findDeltaNN(multiset<int> trans, double delta) {
+int DualTrans::findDeltaNN(multiset<int> trans, double delta) {
     vector<int> rep = get_rep(trans);
     multimap<double, RNode*> candidates;
     candidates.insert({1.0, root});
     vector<multiset<int>> result;
+    int check_count = 0;
     while(candidates.size() > 0) {
         if(candidates.rbegin()->first < delta) {
             break;
@@ -230,14 +232,16 @@ void DualTrans::findDeltaNN(multiset<int> trans, double delta) {
         }
         else {
             for(auto item : next->data) {
+                check_count++;
                 double sim = Measure::computeSim(trans, database[item.first]);
                 if(sim >= delta) {
                     result.push_back(database[item.first]);
                 }
             }
         }
+
     }
-    // return result;
+    return check_count;
 }
 double DualTrans::testKNN(int k) {
     float query_ratio = 1000.0 / database.size();
@@ -260,22 +264,41 @@ double DualTrans::testKNN(int k) {
     // cout<<"average check percentage: "<<avg_check_count<<endl;
     return avg_time_milliseconds;
 }
-double DualTrans::testDeltaNN(float d) {
-    float query_ratio = 1000.0 / database.size();
-    int query_size = 0;
-    auto start = chrono::system_clock::now();
-    for(auto &query_set : database) {
-        float rand_v = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            //cout<<rand_v<<endl;
-            if(rand_v > query_ratio)
-                continue;
-            findDeltaNN(query_set, d);
-            query_size++;
+// double DualTrans::testDeltaNN(float d) {
+//     float query_ratio = 1000.0 / database.size();
+//     int query_size = 0;
+//     long long total_checked_count = 0;
+//     auto start = chrono::system_clock::now();
+//     for(auto &query_set : database) {
+//         float rand_v = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+//             if(rand_v > query_ratio)
+//                 continue;
+//             total_checked_count += findDeltaNN(query_set, d);
+//             query_size++;
+//     }
+//     auto end = chrono::system_clock::now();
+//     double total_time = (end-start).count();
+//     double avg_time_milliseconds = total_time/query_size/1000;
+//     long long avg_checked_count = total_checked_count / query_size;
+//     cout << "DualTrans avg candidates checked: " << avg_checked_count << endl;
+//     cout << "DualTrans average search time: " << avg_time_milliseconds << " ms" << endl;
+//     return avg_time_milliseconds;
+// }
+double DualTrans::testDeltaNN(float d, vector<multiset<int>>& query_sets) {
+    int query_size = query_sets.size();
+    long long total_checked_count = 0;
+
+    auto start = chrono::steady_clock::now();
+    for (auto &query_set : query_sets) {
+        total_checked_count += findDeltaNN(query_set, d);
     }
-    auto end = chrono::system_clock::now();
-    double total_time = (end-start).count();
-    double avg_time_milliseconds = total_time/query_size/1000;
-    cout<<"average search time: "<<avg_time_milliseconds<<endl;
+    auto end = chrono::steady_clock::now();
+    double total_time_milliseconds = chrono::duration<double, std::milli>(end - start).count();
+    double avg_time_milliseconds = total_time_milliseconds / query_size;
+    long long avg_checked_count = total_checked_count / query_size;
+    cout << "DualTrans avg candidates checked: " << avg_checked_count << endl;
+    cout << "DualTrans average search time: " << avg_time_milliseconds << " ms" << endl;
+
     return avg_time_milliseconds;
 }
 double DualTrans::compute_UB(RNode* node, vector<int> point) {

@@ -20,6 +20,8 @@
 #include "MEASURE.h"
 #include "TGM_C.h"
 using namespace std;
+// header for default_random_engine
+#include <random>
 // typedef pair<float, multiset<int>> entry;
 // typedef pair<float, int> entry_construct;
 struct LES3 {
@@ -35,8 +37,12 @@ struct LES3 {
     vector<vector<int>> groups;
     LES3() = default;
     LES3(string path_to_sets, string path_to_groups) {
+        auto build_start = chrono::steady_clock::now();
         preprocess(path_to_sets, path_to_groups);
         tgm.construct(path_to_sets, path_to_groups);
+        auto build_end = chrono::steady_clock::now();
+        double build_time_minutes = chrono::duration<double, std::ratio<60>>(build_end - build_start).count();
+        cout << "LES3 construction time: " << build_time_minutes << " minutes" << endl;
     };
     
     int findKNN(multiset<int> &query_set, int k);
@@ -46,7 +52,27 @@ struct LES3 {
     int get_size_in_MB();
     void insert(string path, float insert_ratio);
     double testKNN(int result_size);
-    double testDeltaNN(float delta);
+    // double testDeltaNN(float delta);
+    double testDeltaNN(float delta, vector<multiset<int>>& query_sets);
+    vector<multiset<int>> sampleQuerySets(int num_queries) {
+        vector<multiset<int>> query_sets;
+        // collect all sets into one flat list
+        vector<multiset<int>*> all_sets;
+        for(auto &group : grouped_database) {
+            for(auto &s : group) {
+                all_sets.push_back(&s);
+            }
+        }
+        // randomly sample num_queries sets
+        srand(42); // fixed seed for reproducibility
+        vector<int> indices(all_sets.size());
+        iota(indices.begin(), indices.end(), 0);
+        shuffle(indices.begin(), indices.end(), default_random_engine(42));
+        for(int i = 0; i < num_queries && i < indices.size(); i++) {
+            query_sets.push_back(*all_sets[indices[i]]);
+        }
+        return query_sets;
+    }
    
 };
 void LES3::preprocess(string path_to_sets, string path_to_groups) {
@@ -90,8 +116,8 @@ void LES3::preprocess(string path_to_sets, string path_to_groups) {
     in.close();
     // database.clear();
     
-    // num_groups = groups.size();
-    // cout<<"num groups: "<<num_groups<<endl;
+    num_groups = groups.size();
+    cout<<"num groups: "<<num_groups<<endl;
    
 }
 int LES3::get_size_in_MB() {
@@ -176,31 +202,52 @@ double LES3::testKNN(int result_size) {
     return avg_time_milliseconds;
 }
 
-double LES3::testDeltaNN(float delta) {
-    float query_ratio = 1000.0 / total_num_sets;
-    int query_size = 0;
-    auto start = chrono::system_clock::now();
-    unsigned total_checked_count = 0;
-    // double ub_sum = 0;
-    for(int i = 0; i < groups.size(); i++) {
-        for(auto &query_set : grouped_database[i]) {
+// double LES3::testDeltaNN(float delta) {
+//     float query_ratio = 1000.0 / total_num_sets;
+//     int query_size = 0;
+//     auto start = chrono::system_clock::now();
+//     unsigned total_checked_count = 0;
+//     // double ub_sum = 0;
+//     for(int i = 0; i < groups.size(); i++) {
+//         for(auto &query_set : grouped_database[i]) {
 
-            float rand_v = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            if(rand_v > query_ratio)
-                continue;
-            query_size++;
-            total_checked_count += findDeltaNN(query_set, delta);
-        }
+//             float rand_v = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+//             if(rand_v > query_ratio)
+//                 continue;
+//             query_size++;
+//             total_checked_count += findDeltaNN(query_set, delta);
+//         }
+//     }
+//     auto end = chrono::system_clock::now();
+//     double total_time = (end-start).count();
+//     double avg_time_milliseconds = total_time/query_size/1000;
+//     unsigned avg_checked_count = total_checked_count / query_size;
+//     // double avg_ub_sum = ub_sum / query_size;
+//     // cout<<"average checked sets: "<<avg_checked_count<<endl;
+//     // cout<<"average upper bounds: "<<avg_ub_sum<<endl;
+//     cout << "LES3 avg candidates checked: " << avg_checked_count << endl;
+//     cout<<"average search time: "<<avg_time_milliseconds<< " ms" << endl;
+//     return avg_time_milliseconds;
+// }
+
+double LES3::testDeltaNN(float delta, vector<multiset<int>>& query_sets) {
+    int query_size = query_sets.size();
+    unsigned total_checked_count = 0;
+
+    auto start = chrono::steady_clock::now();
+    for (auto &query_set : query_sets) {
+        total_checked_count += findDeltaNN(query_set, delta);
     }
-    auto end = chrono::system_clock::now();
-    double total_time = (end-start).count();
-    double avg_time_milliseconds = total_time/query_size/1000;
+    auto end = chrono::steady_clock::now();
+
+    double total_time_milliseconds = chrono::duration<double, std::milli>(end - start).count();
+
+    double avg_time_milliseconds = total_time_milliseconds / query_size;
     unsigned avg_checked_count = total_checked_count / query_size;
-    // double avg_ub_sum = ub_sum / query_size;
-    // cout<<"average checked sets: "<<avg_checked_count<<endl;
-    // cout<<"average upper bounds: "<<avg_ub_sum<<endl;
-    cout<<"average search time: "<<avg_time_milliseconds<<endl;
+
+    cout << "LES3 avg candidates checked: " << avg_checked_count << endl;
+    cout << "LES3 average search time: " << avg_time_milliseconds << " ms" << endl;
+
     return avg_time_milliseconds;
 }
-
 #endif /* LES3_h */
