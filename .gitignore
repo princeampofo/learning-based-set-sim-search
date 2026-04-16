@@ -1,10 +1,8 @@
-datasets/*/all.dat
 datasets/*/all.dat-rep-PTR
 datasets/*/all.dat-group-*
 datasets/*/all.dat-representations-temp
 datasets/*/all.dat-training_time
 datasets/*/all.dat-training-temp
-datasets/*/LES3
 userid-timestamp-artid-artname-traid-traname.tsv
 lastfm_1
 results/logs
