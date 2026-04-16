@@ -1,0 +1,11 @@
+method,dataset,delta,avg_time_ms,avg_candidates,construction_time_min,index_size_mb
+LES3,lastfm,0.9,4.88183,127871,45.65,1
+LES3,lastfm,0.8,5.4287,134003,45.65,1
+LES3,lastfm,0.7,5.85955,140763,45.65,1
+LES3,lastfm,0.6,6.53734,157724,45.65,1
+LES3,lastfm,0.5,7.36341,192600,45.65,1
+DualTrans,lastfm,0.9,7.3043,113738,1.88307,6.32
+DualTrans,lastfm,0.8,9.35921,135753,1.88307,6.32
+DualTrans,lastfm,0.7,12.5271,180693,1.88307,6.32
+DualTrans,lastfm,0.6,15.6672,231792,1.88307,6.32
+DualTrans,lastfm,0.5,22.8878,367520,1.88307,6.32

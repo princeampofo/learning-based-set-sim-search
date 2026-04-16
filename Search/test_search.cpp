@@ -1,6 +1,9 @@
 //
-//  main.cpp
-//  LES3
+//  test_search.cpp
+//  LES3 / DualTrans benchmark runner
+//
+//  Usage:
+//    ./test_search <dataset_name> <path_to_sets> <path_to_groups> <output_csv>
 //
 
 #include <iostream>
@@ -12,7 +15,6 @@
 #include <set>
 #include <map>
 #include <sstream>
-#include <filesystem>
 #include "LES3.h"
 #include "BRUTEFORCE.h"
 #include "DualTrans.h"
@@ -20,83 +22,145 @@
 #include "InvertedIndex.h"
 using namespace std;
 
-// void check_les3(string path_to_sets, string path_to_groups, vector<int> ks, vector<float> ds) {
-//     LES3 les3(path_to_sets, path_to_groups);
-//     cout<<"LES3"<<endl;
-//     cout<<"LES3 size: "<<les3.get_size_in_MB()<<endl;
-//     // for(int k : ks) {
-//     //     cout<<k<<endl;
-//     //     les3.testKNN(k);
-//     // }
-//     // sample 1000 query sets once, reuse for all delta values
-//     vector<multiset<int>> query_sets = les3.sampleQuerySets(1000);
-//     cout << "Query set size: " << query_sets.size() << endl;
-    
-//     for(float d : ds) {
-//         cout << "delta=" << d << endl;
-//         les3.testDeltaNN(d, query_sets);
-//     }
-// }
 
-// void check_dt(string path_to_sets, vector<int> ks, vector<float> ds, vector<multiset<int>>& query_sets) {
-//     DualTrans dt(path_to_sets);
-//     cout<<"DualTrans"<<endl;
-//     cout<<"DT size: "<<dt.get_size_in_MB()<<endl;
-//     // for(int k : ks) {
-//     //     cout<<k<<endl;
-//     //     dt.testKNN(k);
-//     // }
-//     for(float d : ds) {
-//         cout<<d<<endl;
-//         dt.testDeltaNN(d, query_sets);
-//     }
-// }
+// CSV helper
+struct ResultRow {
+    string method;
+    string dataset;
+    float  delta;
+    double avg_time_ms;
+    long long avg_candidates;
+    double construction_time_min;
+    float  index_size_mb;
+};
 
-void check_ii(string path_to_sets, vector<int> ks, vector<float> ds) {
-    InvertedIndex invidx(path_to_sets);
-    
-    cout<<"Inverted index"<<endl;
-    cout<<"invidx size: "<<invidx.get_size_in_MB()<<endl;
-    for(int k : ks) {
-        cout<<k<<endl;
-        invidx.testKNN(k);
+void writeCSV(const string& path, const vector<ResultRow>& rows, bool append) {
+    bool write_header = !append;
+    if(append) {
+        ifstream check(path);
+        if(!check.good()) write_header = true;
     }
-    for(float d : ds) {
-        cout<<d<<endl;
-        invidx.testDeltaNN(d);
+
+    ofstream fout;
+    if(append) fout.open(path, ios::app);
+    else       fout.open(path);
+
+    if(!fout.is_open()) {
+        cerr << "ERROR: cannot open result file: " << path << endl;
+        cerr << "       Check that the directory exists and is writable." << endl;
+        abort();
     }
+
+    if(write_header) {
+        fout << "method,dataset,delta,avg_time_ms,avg_candidates,"
+                "construction_time_min,index_size_mb\n";
+    }
+    for(const auto& r : rows) {
+        fout << r.method               << ","
+             << r.dataset              << ","
+             << r.delta                << ","
+             << r.avg_time_ms          << ","
+             << r.avg_candidates       << ","
+             << r.construction_time_min << ","
+             << r.index_size_mb        << "\n";
+    }
+    fout.flush();
+    fout.close();
+    cout << "Results written to: " << path << endl;
 }
 
-void check_bf(string path_to_sets, vector<int> ks, vector<float> ds) {
-    cout<<"Brute force"<<endl;
-    BRUTEFORCE bf(path_to_sets);
-    bf.testKNN(2);
-}
 
-int main(int argc, const char * argv[]) {
-    
-    string path_to_sets = "../datasets/kosarak/all.dat";
-    
-    string path_to_groups = "../datasets/kosarak/LES3";
-    
-    vector<float> ds({0.9, 0.8, 0.7, 0.6, 0.5});
-    
-    // run LES3 first and get query sets
+// Per-method runners
+vector<ResultRow> run_les3(const string& dataset,
+                           const string& path_to_sets,
+                           const string& path_to_groups,
+                           const vector<float>& ds,
+                           vector<multiset<int>>& shared_query_sets) {
+    vector<ResultRow> rows;
+
     LES3 les3(path_to_sets, path_to_groups);
-    cout << "LES3 size: " << les3.get_size_in_MB() << " MB" << endl;
-    vector<multiset<int>> query_sets = les3.sampleQuerySets(1000);
-    cout << "Query set size: " << query_sets.size() << endl;
-    for(float d : ds) {
-        cout << "delta=" << d << endl;
-        les3.testDeltaNN(d, query_sets);
-    }
-    
-    // reuse same query sets for DualTrans
-    DualTrans dt(path_to_sets);
-    cout << "DualTrans size: " << dt.get_size_in_MB() << " MB" << endl;
-    for(float d : ds) {
-        cout << "delta=" << d << endl;
-        dt.testDeltaNN(d, query_sets);
+    int    size_mb   = les3.get_size_in_MB();
+    double build_min = les3.construction_time_minutes;
+    cout << "LES3 size: " << size_mb << " MB" << endl;
+
+    if(shared_query_sets.empty()) {
+        shared_query_sets = les3.sampleQuerySets(1000);
+        cout << "Sampled " << shared_query_sets.size() << " query sets" << endl;
     }
 
+    for(float d : ds) {
+        cout << "\n[LES3] delta=" << d << endl;
+        auto result = les3.testDeltaNN(d, shared_query_sets);
+        double avg_ms = result.first;
+        long long avg_cands = result.second;
+        ResultRow row;
+        row.method = "LES3";
+        row.dataset = dataset;
+        row.delta = d;
+        row.avg_time_ms = avg_ms;
+        row.avg_candidates = avg_cands;
+        row.construction_time_min = build_min;
+        row.index_size_mb = static_cast<float>(size_mb);
+        rows.push_back(row);
+    }
+    return rows;
+}
+
+vector<ResultRow> run_dualtrans(const string& dataset,
+                                const string& path_to_sets,
+                                const vector<float>& ds,
+                                vector<multiset<int>>& shared_query_sets) {
+    vector<ResultRow> rows;
+
+    DualTrans dt(path_to_sets);
+    float  size_mb = dt.get_size_in_MB();
+    size_mb = round(size_mb * 100.0f) / 100.0f;
+    double build_min = dt.construction_time_minutes;
+    cout << "DualTrans size: " << size_mb << " MB" << endl;
+
+    for(float d : ds) {
+        cout << "\n[DualTrans] delta=" << d << endl;
+        auto [avg_ms, avg_cands] = dt.testDeltaNN(d, shared_query_sets);
+        rows.push_back({"DualTrans", dataset, d, avg_ms, avg_cands, build_min, size_mb});
+    }
+    return rows;
+}
+
+// Main
+int main(int argc, const char* argv[]) {
+
+    string dataset        = "kosarak";
+    string path_to_sets   = "../datasets/kosarak/all.dat";
+    string path_to_groups = "../datasets/kosarak/LES3";
+    string result_path    = "./results/kosarak_results.csv";
+
+    if(argc >= 5) {
+        dataset        = argv[1];
+        path_to_sets   = argv[2];
+        path_to_groups = argv[3];
+        result_path    = argv[4];  
+    } else {
+        cout << "Usage: " << argv[0]
+             << " <dataset> <path_to_sets> <path_to_groups> <output_csv>\n"
+             << "Falling back to defaults (kosarak).\n\n";
+    }
+
+    cout << "Output CSV: " << result_path << endl;
+
+    vector<float> ds = {0.9f, 0.8f, 0.7f, 0.6f, 0.5f};
+    vector<multiset<int>> shared_query_sets;
+
+    // Run LES3
+    cout << "\n========== LES3 | " << dataset << " ==========\n";
+    auto les3_rows = run_les3(dataset, path_to_sets, path_to_groups,
+                              ds, shared_query_sets);
+    writeCSV(result_path, les3_rows, /*append=*/false);
+
+    // Run DualTrans
+    cout << "\n========== DualTrans | " << dataset << " ==========\n";
+    auto dt_rows = run_dualtrans(dataset, path_to_sets, ds, shared_query_sets);
+    writeCSV(result_path, dt_rows, /*append=*/true);
+
+    cout << "\nAll results saved to: " << result_path << endl;
+    return 0;
 }

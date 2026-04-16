@@ -56,7 +56,7 @@ for _dir in dirs:
     if "kosarak" in _dir or "retail" in _dir:
         file_name = 'kosarak.dat' if "kosarak" in _dir else 'retail.dat'
     elif "lastfm" in _dir:
-        file_name = 'lastfm.fimi'
+        file_name = 'lastfm1k.dat'
     database = read_database(_dir + file_name)
     database = clean_database(database, _dir.split("/")[1])
     database = sort_database(database)
