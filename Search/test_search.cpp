@@ -79,7 +79,9 @@ vector<ResultRow> run_les3(const string& dataset,
     vector<ResultRow> rows;
 
     LES3 les3(path_to_sets, path_to_groups);
-    int    size_mb   = les3.get_size_in_MB();
+    float    size_mb   = les3.get_size_in_MB();
+    // Round to 2 decimal places
+    size_mb = round(size_mb * 100.0f) / 100.0f;
     double build_min = les3.construction_time_minutes;
     cout << "LES3 size: " << size_mb << " MB" << endl;
 
@@ -93,15 +95,7 @@ vector<ResultRow> run_les3(const string& dataset,
         auto result = les3.testDeltaNN(d, shared_query_sets);
         double avg_ms = result.first;
         long long avg_cands = result.second;
-        ResultRow row;
-        row.method = "LES3";
-        row.dataset = dataset;
-        row.delta = d;
-        row.avg_time_ms = avg_ms;
-        row.avg_candidates = avg_cands;
-        row.construction_time_min = build_min;
-        row.index_size_mb = static_cast<float>(size_mb);
-        rows.push_back(row);
+        rows.push_back({"LES3", dataset, d, avg_ms, avg_cands, build_min, size_mb});
     }
     return rows;
 }

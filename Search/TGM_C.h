@@ -25,7 +25,7 @@ struct TGM_C {
     
     float getUB(multiset<int> query_set, int group_id);
     int insert(multiset<int> set_to_insert);
-    int get_size();
+    float get_size();
 };
 
 void TGM_C::construct(string path_to_sets, string path_to_groups){
@@ -64,12 +64,11 @@ void TGM_C::construct(string path_to_sets, string path_to_groups){
     }
     
 }
-int TGM_C::get_size() {
+float TGM_C::get_size() {
     int total_size = 0;
-    for(auto r : bit_map) {
+    for(auto r : bit_map)
         total_size += r.getSizeInBytes();
-    }
-    return total_size/1024/1024;
+    return (float)total_size / 1024.0f / 1024.0f;
 }
 float TGM_C::getUB(multiset<int> query_set, int group_id) {
     // return Measure::computeUB(query_set, bit_map, group_id);

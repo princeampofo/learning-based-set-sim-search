@@ -85,12 +85,11 @@ double dist_between_nodes(RNode n1, RNode n2) {
 }
 int RNode::get_size_in_bytes() {
     int result = range.size() * 2 * 4;
-    for(RNode* node : children) {
+    for(RNode* node : children)
         result += node->get_size_in_bytes();
-    }
-    result += data.size() * 4;
+    result += data.size() * (4 + 2*dim*4);
     result += children.size() * 8;
-    result += parent == nullptr? 0 : 8;
+    result += parent == nullptr ? 0 : 8;
     return result;
 }
 

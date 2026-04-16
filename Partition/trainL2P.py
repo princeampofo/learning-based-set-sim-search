@@ -10,8 +10,8 @@ from les3_losses import ContrastiveLoss
 from les3_networks import SiameseNet, EmbeddingNetMLP
 from les3_trainer import fit_siamese
 
-path = "datasets/lastfm/all.dat"
-num_sets = 960402
+path = "datasets/retail/all.dat"
+num_sets = 88162
 
 def initialize():
     num_init_groups = 128
@@ -183,7 +183,7 @@ def cascade_training(new_group_suffix, DATASET):
 partition_threshold = 50
 initialize()
 with open(path+"-training_time", 'w') as cost_file:
-    for current_group_suffix in range(0,5):
+    for current_group_suffix in range(0,2):
         start_time = time.time()
         if os.path.isfile(path + "-group-" + str(current_group_suffix + 2)):
             continue

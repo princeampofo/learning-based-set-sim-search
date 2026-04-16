@@ -11,9 +11,9 @@ LOG_DIR="$(pwd)/results/logs"               # per-run stdout logs
 
 # List of dataset names (must match subfolder names under $DATASETS_ROOT)
 DATASETS=(
-    "retail"
-    "kosarak"
-    "lastfm"
+    'kosarak'
+    'lastfm'
+    'retail'
 )
 
 # File names within each dataset folder
@@ -83,23 +83,23 @@ for DATASET in "${DATASETS[@]}"; do
     echo ""
 done
 
-# Merge all per-dataset CSVs into one combined CSV 
-COMBINED="$RESULTS_DIR/all_results.csv"
-echo "Merging results into: $COMBINED"
+# # Merge all per-dataset CSVs into one combined CSV 
+# COMBINED="$RESULTS_DIR/all_results.csv"
+# echo "Merging results into: $COMBINED"
 
-# Write header once
-echo "method,dataset,delta,avg_time_ms,avg_candidates,construction_time_min,index_size_mb" \
-    > "$COMBINED"
+# # Write header once
+# echo "method,dataset,delta,avg_time_ms,avg_candidates,construction_time_min,index_size_mb" \
+#     > "$COMBINED"
 
-for DATASET in "${DATASETS[@]}"; do
-    DATASET_CSV="$RESULTS_DIR/${DATASET}_results.csv"
-    if [[ -f "$DATASET_CSV" ]]; then
-        # Skip header row (line 1) when appending
-        tail -n +2 "$DATASET_CSV" >> "$COMBINED"
-    fi
-done
+# for DATASET in "${DATASETS[@]}"; do
+#     DATASET_CSV="$RESULTS_DIR/${DATASET}_results.csv"
+#     if [[ -f "$DATASET_CSV" ]]; then
+#         # Skip header row (line 1) when appending
+#         tail -n +2 "$DATASET_CSV" >> "$COMBINED"
+#     fi
+# done
 
 echo ""
 echo "============================================================"
-echo "  Done. Combined results: $COMBINED"
+echo "  Done. Results are in: $RESULTS_DIR"
 echo "============================================================"

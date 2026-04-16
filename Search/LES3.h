@@ -46,7 +46,7 @@ struct LES3 {
     int findDeltaNN(multiset<int> &query_set, float delta);
     void preprocess(string path_to_sets, string path_to_groups);
     void insert_helper(multiset<int> &set_to_insert);
-    int get_size_in_MB();
+    float get_size_in_MB();
     void insert(string path, float insert_ratio);
     double testKNN(int result_size);
 
@@ -114,7 +114,7 @@ void LES3::preprocess(string path_to_sets, string path_to_groups) {
     cout << "num groups: " << num_groups << endl;
 }
 
-int LES3::get_size_in_MB() {
+float LES3::get_size_in_MB() {
     return tgm.get_size();
 }
 
