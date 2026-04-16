@@ -33,29 +33,25 @@ This produces `all.dat-rep-PTR` in your dataset folder.
 
 ## Step 3: Train LES3 Partitions (L2P)
 
-`trainL2P.py` runs the cascade Siamese network training. This is the most
-time-consuming step and constitutes the majority of LES3's construction time.
+`trainL2P.py` runs the cascade Siamese network training — the most time-consuming step of LES3 construction.
 
 ```bash
 python3 Partition/trainL2P.py
 ```
 
-Before running, update these two variables at the top of the script:
+Before running, update these variables at the top of the script:
 
 ```python
-# For kosarak:
-path = "datasets/kosarak/all.dat"
-num_sets = 990002   # from: wc -l datasets/kosarak/all.dat to get line count
+path     = "datasets/<dataset>/all.dat"
+num_sets = <line count of all.dat>   # use: wc -l datasets/<dataset>/all.dat
 ```
 
-This produces group files: `all.dat-group-0` through `all.dat-group-5`.
+The LES paper recommends setting the number of final groups to **~0.5% of |D|**. Given that `initialize()` starts with 128 groups, set the cascade range accordingly.
 
-### Choosing the Right Partition File
+Adjust `range(0, n)` in the script to match your dataset size. Always use the **final** group file for TGM construction:
 
-Copy the chosen file group to `LES3`:
 ```bash
-# eg. For RETAIL:
-cp datasets/retail/all.dat-group-2 datasets/retail/LES3
+cp datasets/<dataset>/all.dat-group-<n> datasets/<dataset>/LES3
 ```
 
 ## Step 4: Run experiments
