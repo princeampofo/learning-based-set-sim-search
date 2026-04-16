@@ -36,9 +36,8 @@ This produces `all.dat-rep-PTR` in your dataset folder.
 `trainL2P.py` runs the cascade Siamese network training. This is the most
 time-consuming step and constitutes the majority of LES3's construction time.
 
-**Time this step — it is part of LES3's reported construction time:**
 ```bash
-time python3 Partition/trainL2P.py
+python3 Partition/trainL2P.py
 ```
 
 Before running, update these two variables at the top of the script:
