@@ -10,8 +10,8 @@ from les3_losses import ContrastiveLoss
 from les3_networks import SiameseNet, EmbeddingNetMLP
 from les3_trainer import fit_siamese
 
-path = "datasets/retail/all.dat"
-num_sets = 88162
+path = "datasets/lastfm/all.dat"
+num_sets = 960402
 
 def initialize():
     num_init_groups = 128
