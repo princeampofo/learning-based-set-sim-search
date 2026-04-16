@@ -59,27 +59,8 @@ Copy the chosen file group to `LES3`:
 cp datasets/retail/all.dat-group-2 datasets/retail/LES3
 ```
 
-## Step 6: Configure `test_search.cpp`
-
-Update the dataset paths in `test_search.cpp` to point to your `all.dat` and `LES3` files. These paths are used by both LES3 and DualTrans for loading the dataset and the LES3 partitions, respectively.
-
-## Step 7: Compile
+## Step 4: Run experiments
+Run bash `run_experiments.sh` to execute LES3 and DualTrans on the test sets. This produces the final CSV results file.
 ```bash
-cd Search
-g++ -o test_search test_search.cpp
-```
-
----
-
-## Step 8: Run
-
-From inside the `Search/` directory, run and save output:
-
-```bash
-# Save to file and print to terminal simultaneously
-./test_search | tee results_retail.txt
-
-# Repeat for each dataset after updating test_search.cpp and recompiling
-./test_search | tee results_kosarak.txt
-./test_search | tee results_lastfm.txt
+bash run_experiments.sh
 ```

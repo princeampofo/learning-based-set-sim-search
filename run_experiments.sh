@@ -1,29 +1,9 @@
 #!/usr/bin/env bash
 # run_experiments.sh
-# ─────────────────────────────────────────────────────────────────────────────
-# Runs LES3 + DualTrans delta-NN benchmarks across all datasets.
-# Assumes the compiled binary is at ./Search/test_search (adjust BINARY below).
-#
-# Directory layout expected:
-#   ./Search/         ← source code + compiled binary
-#   ./datasets/       ← one subfolder per dataset
-#   ./results/        ← created automatically
-#
-# Each dataset folder must contain:
-#   all.dat           ← set database
-#   LES3              ← group file for LES3
-#
-# Usage:
-#   cd <project_root>
-#   chmod +x run_experiments.sh
-#   ./run_experiments.sh
-#
-# To add a dataset: append an entry to the DATASETS array below.
-# ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
 
-# ── Config ────────────────────────────────────────────────────────────────────
+# Config
 BINARY="./Search/test_search"          # path to compiled binary
 DATASETS_ROOT="./datasets"             # root folder for all datasets
 RESULTS_DIR="$(pwd)/results"                # output folder for CSV files
@@ -39,12 +19,11 @@ DATASETS=(
 # File names within each dataset folder
 SETS_FILE="all.dat"
 GROUPS_FILE="LES3"
-# ─────────────────────────────────────────────────────────────────────────────
 
-# ── Setup ─────────────────────────────────────────────────────────────────────
+# Setup
 mkdir -p "$RESULTS_DIR" "$LOG_DIR"
 
-# ── Compile ───────────────────────────────────────────────────────────────────
+# Compile 
 echo "Compiling test_search ..."
 g++ -std=c++17 -O2 \
     -o "$BINARY" \
@@ -79,7 +58,7 @@ for DATASET in "${DATASETS[@]}"; do
     echo "  Sets   : $SETS_PATH"
     echo "  Groups : $GROUPS_PATH"
 
-    # ── Validate dataset files exist ──────────────────────────────────────────
+    # Validate dataset files exist 
     if [[ ! -f "$SETS_PATH" ]]; then
         echo "  SKIP: sets file not found → $SETS_PATH"
         echo ""
@@ -104,7 +83,7 @@ for DATASET in "${DATASETS[@]}"; do
     echo ""
 done
 
-# ── Merge all per-dataset CSVs into one combined CSV ─────────────────────────
+# Merge all per-dataset CSVs into one combined CSV 
 COMBINED="$RESULTS_DIR/all_results.csv"
 echo "Merging results into: $COMBINED"
 
