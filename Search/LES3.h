@@ -52,24 +52,6 @@ struct LES3 {
 
     // Returns {avg_time_ms, avg_candidates_checked}
     pair<double, long long> testDeltaNN(float delta, vector<multiset<int>>& query_sets);
-
-    vector<multiset<int>> sampleQuerySets(int num_queries) {
-        vector<multiset<int>> query_sets;
-        vector<multiset<int>*> all_sets;
-        for(auto &group : grouped_database) {
-            for(auto &s : group) {
-                all_sets.push_back(&s);
-            }
-        }
-        srand(42);
-        vector<int> indices(all_sets.size());
-        iota(indices.begin(), indices.end(), 0);
-        shuffle(indices.begin(), indices.end(), default_random_engine(42));
-        for(int i = 0; i < num_queries && i < (int)indices.size(); i++) {
-            query_sets.push_back(*all_sets[indices[i]]);
-        }
-        return query_sets;
-    }
 };
 
 void LES3::preprocess(string path_to_sets, string path_to_groups) {

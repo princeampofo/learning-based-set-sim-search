@@ -15,6 +15,8 @@
 #include <set>
 #include <map>
 #include <sstream>
+#include <numeric>
+#include <random>
 #include "LES3.h"
 #include "BRUTEFORCE.h"
 #include "DualTrans.h"
@@ -22,6 +24,27 @@
 #include "InvertedIndex.h"
 using namespace std;
 
+
+// Load all sets from file and sample num_queries with a fixed seed
+vector<multiset<int>> loadAndSampleSets(const string& path_to_sets, int num_queries, unsigned seed = 42) {
+    vector<multiset<int>> all_sets;
+    ifstream in(path_to_sets);
+    string line;
+    while(getline(in, line)) {
+        istringstream iss(line);
+        string token;
+        multiset<int> s;
+        while(iss >> token) s.insert(stoi(token));
+        if(!s.empty()) all_sets.push_back(s);
+    }
+    vector<int> indices(all_sets.size());
+    iota(indices.begin(), indices.end(), 0);
+    shuffle(indices.begin(), indices.end(), mt19937(seed));
+    vector<multiset<int>> sampled;
+    for(int i = 0; i < num_queries && i < (int)indices.size(); i++)
+        sampled.push_back(all_sets[indices[i]]);
+    return sampled;
+}
 
 // CSV helper
 struct ResultRow {
@@ -85,11 +108,6 @@ vector<ResultRow> run_les3(const string& dataset,
     double build_min = les3.construction_time_minutes;
     cout << "LES3 size: " << size_mb << " MB" << endl;
 
-    if(shared_query_sets.empty()) {
-        shared_query_sets = les3.sampleQuerySets(1000);
-        cout << "Sampled " << shared_query_sets.size() << " query sets" << endl;
-    }
-
     for(float d : ds) {
         cout << "\n[LES3] delta=" << d << endl;
         auto result = les3.testDeltaNN(d, shared_query_sets);
@@ -142,7 +160,10 @@ int main(int argc, const char* argv[]) {
     cout << "Output CSV: " << result_path << endl;
 
     vector<float> ds = {0.9f, 0.8f, 0.7f, 0.6f, 0.5f};
-    vector<multiset<int>> shared_query_sets;
+
+    cout << "Sampling 1000 query sets from: " << path_to_sets << endl;
+    vector<multiset<int>> shared_query_sets = loadAndSampleSets(path_to_sets, 1000, 42);
+    cout << "Sampled " << shared_query_sets.size() << " query sets" << endl;
 
     // Run LES3
     cout << "\n========== LES3 | " << dataset << " ==========\n";

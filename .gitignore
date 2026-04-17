@@ -6,6 +6,7 @@ datasets/*/all.dat-training-temp
 userid-timestamp-artid-artname-traid-traname.tsv
 lastfm_1
 results/logs
+results1
 convert.py
 .vscode
 Partition/__pycache__
