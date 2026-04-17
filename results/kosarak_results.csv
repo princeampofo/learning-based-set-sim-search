@@ -1,5 +1,4 @@
 method,dataset,delta,avg_time_ms,avg_candidates,construction_time_min,index_size_mb
-<<<<<<< HEAD
 LES3,kosarak,0.9,4.22926,101094,327.22,4.52
 LES3,kosarak,0.8,5.50863,113792,327.22,4.52
 LES3,kosarak,0.7,7.19573,137313,327.22,4.52
@@ -10,15 +9,3 @@ DualTrans,kosarak,0.8,10.4561,107012,1.55585,129.54
 DualTrans,kosarak,0.7,17.4436,194741,1.55585,129.54
 DualTrans,kosarak,0.6,22.8577,273018,1.55585,129.54
 DualTrans,kosarak,0.5,34.3858,438180,1.55585,129.54
-=======
-LES3,kosarak,0.9,4.08789,101094,166.25,4
-LES3,kosarak,0.8,5.30157,113792,166.25,4
-LES3,kosarak,0.7,6.80514,137313,166.25,4
-LES3,kosarak,0.6,9.31939,194279,166.25,4
-LES3,kosarak,0.5,13.3493,319237,166.25,4
-DualTrans,kosarak,0.9,6.01983,67216,1.54665,8.70
-DualTrans,kosarak,0.8,9.88428,107012,1.54665,8.70
-DualTrans,kosarak,0.7,16.3796,194741,1.54665,8.70
-DualTrans,kosarak,0.6,22.1994,273018,1.54665,8.70
-DualTrans,kosarak,0.5,33.5938,438180,1.54665,8.70
->>>>>>> a67531c (chore: add per-dataset results)

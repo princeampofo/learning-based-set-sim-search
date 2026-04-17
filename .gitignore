@@ -1,13 +1,8 @@
-<<<<<<< HEAD
-=======
-datasets/*/all.dat
->>>>>>> a67531c (chore: add per-dataset results)
 datasets/*/all.dat-rep-PTR
 datasets/*/all.dat-group-*
 datasets/*/all.dat-representations-temp
 datasets/*/all.dat-training_time
 datasets/*/all.dat-training-temp
-<<<<<<< HEAD
 userid-timestamp-artid-artname-traid-traname.tsv
 lastfm_1
 results/logs
@@ -16,12 +11,3 @@ convert.py
 .vscode
 Partition/__pycache__
 Search/test_search
-=======
-datasets/*/LES3
-userid-timestamp-artid-artname-traid-traname.tsv
-lastfm_1
-results/logs
-convert.py
-.vscode
-Partition/__pycache__
->>>>>>> a67531c (chore: add per-dataset results)

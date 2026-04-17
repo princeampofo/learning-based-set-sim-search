@@ -48,20 +48,11 @@ num_sets = <line count of all.dat>   # use: wc -l datasets/<dataset>/all.dat
 
 The LES paper recommends setting the number of final groups to **~0.5% of |D|**. Given that `initialize()` starts with 128 groups, set the cascade range accordingly.
 
-<<<<<<< HEAD
 Adjust `range(0, n)` in the script to match your dataset size. Always use the **final** group file for TGM construction:
 e.g. for retail we use `range(0, 2)` and for lastfm and kosarak we use `range(0, 5)`.
 
 ```bash
 cp datasets/<dataset>/all.dat-group-<n> datasets/<dataset>/LES3
-=======
-### Choosing the Right Partition File
-
-Copy the chosen file group to `LES3`:
-```bash
-# eg. For RETAIL:
-cp datasets/retail/all.dat-group-2 datasets/retail/LES3
->>>>>>> a67531c (chore: add per-dataset results)
 ```
 
 ## Step 4: Run experiments
